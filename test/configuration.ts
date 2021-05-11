@@ -1,0 +1,10 @@
+describe("Rabbit", () => {
+  it("Should allow an empty connection string")
+  it("Should allow amqps")
+  it("Should allow amqp")
+  it("Should allow a connection object")
+  it("Should allow connecting to a cluster")
+  it("Should allow a configuration object")
+  it("Should validate the configuration object")
+  it("Should allow policies")
+})
