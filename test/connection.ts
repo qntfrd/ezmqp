@@ -1,0 +1,12 @@
+describe("Connection", () => {
+  it("Shuold open/close a connection")
+  it("Should assert the configuration")
+  it("Creating a channel should connect")
+  it("Closing a channel should not disconnect")
+  it("Should configure the connection policy (retries/frequency)")
+  it("Should attempt to round robin connection to cluster nodes")
+  it("Should reconnect to the server if the connection is lost")
+  it("Should reconnect to the cluster if the connection is lost")
+  it("Should reopen channels if the connection was interupted")
+  it("Should reopen the channels if the channel broke")
+})

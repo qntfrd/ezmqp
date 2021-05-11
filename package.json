@@ -6,9 +6,19 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "prepublish": "tsc",
-    "doc": "typedoc"
+    "doc": "typedoc",
+    "test": "mocha -r ts-node/register test/**/*.ts --inspect",
+    "test:cover": "nyc npm test",
+    "test:watch": "npm test -- -w --watch-files test/**/*.ts,src/**/*.ts"
   },
-  "keywords": ["rabbitmq", "rabbit", "pubsub", "message", "broker"],
+  "keywords": [
+    "rabbitmq",
+    "rabbit",
+    "pubsub",
+    "message",
+    "broker",
+    "amqp"
+  ],
   "author": "qntfrd <quentin@forand.fr> (https://github.com/qntfrd)",
   "license": "MIT",
   "homepage": "https://github.com/qntfrd/ezmqp#readme",
@@ -21,6 +31,14 @@
   },
   "devDependencies": {
     "@types/amqplib": "0.5.17",
+    "@types/chai": "^4.2.18",
+    "@types/mocha": "^8.2.2",
+    "@types/sinon": "^10.0.0",
+    "chai": "^4.3.4",
+    "mocha": "^8.4.0",
+    "nyc": "^15.1.0",
+    "sinon": "^10.0.0",
+    "ts-node": "^9.1.1",
     "typedoc": "0.20.36",
     "typescript": "4.2.4"
   },
