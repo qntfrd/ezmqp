@@ -1,0 +1,1 @@
+export { Rabbit } from "./rabbit"

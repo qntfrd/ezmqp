@@ -1,0 +1,35 @@
+{
+  "name": "ezmqp",
+  "version": "0.0.0",
+  "description": "Rabbit MQ made easy",
+  "main": "dist/index.ts",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "prepublish": "tsc",
+    "doc": "typedoc"
+  },
+  "keywords": ["rabbitmq", "rabbit", "pubsub", "message", "broker"],
+  "author": "qntfrd <quentin@forand.fr> (https://github.com/qntfrd)",
+  "license": "MIT",
+  "homepage": "https://github.com/qntfrd/ezmqp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qntfrd/ezmqp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/qtfrd/ezmqp/issues"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.5.17",
+    "typedoc": "^0.20.36",
+    "typescript": "^4.2.4"
+  },
+  "dependencies": {
+    "amqplib": "^0.7.1",
+    "fast-safe-stringify": "^2.0.7",
+    "nanoid": "^3.1.22"
+  },
+  "files": [
+    "dist/**/*"
+  ]
+}
