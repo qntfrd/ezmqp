@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "up": "docker-compose up --renew-anon-volumes",
     "prepublish": "tsc",
     "doc": "typedoc",
     "test": "mocha -r ts-node/register test/**/*.ts --inspect",

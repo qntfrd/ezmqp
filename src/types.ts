@@ -225,8 +225,8 @@ export type MsgOptions = {
 } & MsgData
 
 /** Message options to receive */
-export type ReceivedMessage = {
-  content: Buffer|Object,
+export type ReceivedMessage<T> = {
+  content: T,
 } & MsgData
 
 /** Some options for the consumer */
@@ -259,4 +259,4 @@ export type ConsumerOptions = {
 }
 
 export type Ack = (success?: boolean) => void|Promise<void>
-export type Handler = (message: ReceivedMessage, ack: Ack) => Promise<void>|void
+export type Handler<T> = (message: ReceivedMessage<T>, ack: Ack) => Promise<void>|void

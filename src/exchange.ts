@@ -1,13 +1,7 @@
 import { Rabbit } from "./rabbit"
 import { ExchangeConfig, MsgOptions } from "./types"
 import { Queue } from "./queue"
-import stringify from "fast-safe-stringify"
-import { nanoid } from "nanoid"
-
-const fss = (obj: any) => {
-  try { return JSON.stringify(obj) }
-  catch { return stringify(obj) }
-}
+import { prepareMessage } from "./utils"
 
 export class Exchange {
   /** Whether the exchange was asserted */
@@ -60,19 +54,6 @@ export class Exchange {
    *  @param options - Some options
    */
   async pub(routingKey: string, message: Object|Buffer, options: MsgOptions = {}) {
-    const opts: MsgOptions = {
-      messageId: nanoid(),
-      timestamp: Date.now(),
-      appId: process.env.npm_package_name,
-      ...options
-    }
-    if (Buffer.isBuffer(message))
-      this.broker.channel("__write__").publish(this.name, routingKey, message, opts)
-    else if (options.contentType && options.contentType !== "application/json")
-      this.broker.channel("__write__").publish(this.name, routingKey, Buffer.from(fss(message)), opts)
-    else {
-      opts.contentType = "application/json"
-      this.broker.channel("__write__").publish(this.name, routingKey, Buffer.from(fss(message)), opts)
-    }
+    this.broker.channel("__write__").publish(this.name, routingKey, ...prepareMessage(message, options))
   }
 }
