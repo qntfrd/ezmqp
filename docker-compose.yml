@@ -1,0 +1,45 @@
+version: "3"
+
+services:
+  rabbit1:
+    hostname: rabbit1
+    tty: true
+    build:
+      context: ./docker
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-admin}
+    ports:
+      - 5001:5672
+      - 15001:15672
+
+  rabbit2:
+    hostname: rabbit2
+    tty: true
+    build:
+      context: ./docker
+    ports:
+      - 5002:5672
+      - 15002:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-admin}
+      CLUSTER_WITH: rabbit1
+    depends_on:
+    - rabbit1
+
+  rabbit3:
+    hostname: rabbit3
+    tty: true
+    build:
+      context: ./docker
+    ports:
+      - 5003:5672
+      - 15003:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-admin}
+      CLUSTER_WITH: rabbit1
+    depends_on:
+    - rabbit1
+

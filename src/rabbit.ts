@@ -75,6 +75,13 @@ export class Rabbit {
     return this
   }
 
+  async close() {
+    if (!this.client) return this
+    await this.client.close()
+    this.client = null
+    return this
+  }
+
   /** Retrieve or create a channel */
   channel(name: string): Channel {
     if (!this.client) throw new Error("Broker is not connected") // TODO: should that stay here? / Should we autoconnect?
