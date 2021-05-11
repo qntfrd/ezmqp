@@ -20,9 +20,9 @@
     "url": "https://github.com/qtfrd/ezmqp/issues"
   },
   "devDependencies": {
-    "@types/amqplib": "^0.5.17",
-    "typedoc": "^0.20.36",
-    "typescript": "^4.2.4"
+    "@types/amqplib": "0.5.17",
+    "typedoc": "0.20.36",
+    "typescript": "4.2.4"
   },
   "dependencies": {
     "amqplib": "^0.7.1",
