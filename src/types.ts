@@ -149,8 +149,91 @@ export type QueueConfig = {
   arguments?: {[key: string]: string}
 }
 
-export type Config = {
-  connection: string,
+/** Defines how to connect to the server */
+export type Connection = {
+  /** Whether to use amqp or amqps
+   *
+   *  @default "amqp"
+   */
+  protocol?: "amqp"|"amqps"
+
+  /** The rabbit node hostname
+   *
+   *  @default "localhost"
+   */
+  hostname?: string
+
+  /** The port the server listens to
+   *
+   *  @default 5672
+   */
+  port?: number
+
+  /** The username to connect to rabbit with
+   *
+   *  @default "guest"
+   */
+  username?: string
+
+  /** The user's password
+   *
+   *  @default "guest"
+   */
+  password?: string
+
+  /** The locale to use for rabbit error
+   *
+   *  @notice Rabbit only uses `en_US`
+   *  @default "en_US"
+   */
+  locale?: "en_US"
+
+  /** The size in bytes of the maximum frame allowed over the connection
+   *
+   *  0 means no limit, but since frames have a size field which is an unsigned
+   *  32 bit integer, it’s perforce 2^32 - 1
+   *
+   *  @default 0
+   */
+  frameMax?: number
+
+  /** The maximum number of channel allowed
+   *
+   *  0 means no limit, or 2^16 - 1
+   *
+   *  @default 0
+   */
+  channelMax?: number
+
+  /** The period of the connection heartbeat, in seconds
+   *
+   *  If you supply a non-zero period in seconds as the heartbeat parameter, the
+   *  connection will be monitored for liveness. If the client fails to read
+   *  data from the connection for two successive intervals, the connection will
+   *  emit an error and close. It will also send heartbeats to the server (in
+   *  the absence of other data).
+   *
+   *  If you supply 0 as the heartbeat parameter (or defaults to 0), the server
+   *  value is used. This means that you can only disable heartbeat if the
+   *  server value is also 0. See [here](https://www.rabbitmq.com/configure.html)
+   *  for more details.
+   *
+   *  NOTE: Please consider NOT disabling heartbeats because they exist for a
+   *  [reason](http://www.rabbitmq.com/heartbeats.html).
+   *
+   *  @default 0
+   */
+  heartbeat?: number
+
+  /** The vhost to use
+   *
+   *  @default "/"
+   */
+  vhost?: string
+}
+
+export type Configuration = {
+  connection?: string|Connection|Array<string|Connection>,
   exchanges?: {
     [key: string]: ExchangeConfig
   },
