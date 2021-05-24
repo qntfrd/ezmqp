@@ -57,7 +57,7 @@ const makeExpectCS = (obj: ConnectionOpts): string => {
   return cs
 }
 
-describe.only("Rabbit", () => {
+describe("Rabbit", () => {
   const connectionTests = [
     ["empty connection string", , "amqp://guest:****@localhost:5672/"],
     ["simple connection string", "amqp://foo:bar@baz", "amqp://foo:****@baz:5672/"],
@@ -84,8 +84,8 @@ describe.only("Rabbit", () => {
     username: [[,"","foo"], [], ""],
     password: [[,"","bar"], [], ""],
     channelMax: [[,0, "12", 2**16-1], [-1, "bar", 2**16], "Invalid channelMax '%s'. Expected range between 0 and 2^16-1"],
-    frameMax: [[,0, "12", 2**32-1], [-1, "bar", 2**32], "Invalid frameMax '%s'. Expected range between 0 and 2^16-1"],
-    heartbeat: [[,0, "12"], [-1, "bar"], "Invalid heartbeat '%s'. Expected range between 0 and 2^16-1"],
+    frameMax: [[,0, "12", 2**32-1], [-1, "bar", 2**32], "Invalid frameMax '%s'. Expected range between 0 and 2^32-1"],
+    heartbeat: [[,0, "12"], [-1, "bar"], "Invalid heartbeat '%s'. Expected range between 0 and 2^32-1"],
     vhost: [[, "", "/plop", "/"], ["a"], "Invalid vhost '%s'. Must start with '/'"]
   }
 
@@ -129,11 +129,6 @@ describe.only("Rabbit", () => {
     }
   }
 
-  it("Should allow amqps")
-  it("Should allow amqp")
-  it("Should allow a connection object")
-  it("Should allow connecting to a cluster")
-  it("Should allow a configuration object")
   it("Should validate the configuration object")
   it("Should allow policies")
 })
