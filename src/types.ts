@@ -242,6 +242,16 @@ export type Configuration = {
   }
 }
 
+export type InternalConfiguration = {
+  connection: Array<Required<Connection>>
+  exchanges?: {
+    [key: string]: ExchangeConfig,
+  }
+  queues?: {
+    [key: string]: QueueConfig
+  }
+}
+
 /** Message options that can be send or received */
 export type MsgData = {
   headers?: { [key: string]: any }
