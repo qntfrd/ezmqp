@@ -1,4 +1,4 @@
-import { InternalConfiguration, Connection, Configuration } from "./types"
+import { InternalConfiguration, Connection, Configuration, ConnectionString } from "./types"
 
 /** Validates that a number is properly formated
  *
@@ -148,7 +148,7 @@ const isConnection = (
  *  @throws "Invalid vhost '%s'. Must start with '/'
  */
 const getConnections = (
-  connection?: Configuration|Connection|string|Array<Connection|string>
+  connection?: Configuration|ConnectionString
 ): Array<Required<Connection>> => {
   if (connection === null || connection === undefined || typeof connection === "string")
     return parseConnectionString(connection as string)
@@ -161,7 +161,10 @@ const getConnections = (
   else if (isConnection(connection))
     return [validateConnection(connection as Connection)]
   else if (connection.hasOwnProperty("connection")) {
-    return getConnections((connection as Configuration).connection)
+    if ((connection as Configuration).connection?.hasOwnProperty("nodes"))
+      return getConnections((connection as InternalConfiguration).connection.nodes)
+    else
+      return getConnections((connection as Configuration).connection as ConnectionString)
   }
 }
 
@@ -179,8 +182,20 @@ const getConnections = (
  *  @throws "Invalid vhost '%s'. Must start with '/'
  */
 export const loadConfiguration = (
-  connection?: Connection|Configuration|string|Array<Connection|string>,
+  connection?: ConnectionString|Configuration,
   configuration?: Configuration
 ): InternalConfiguration => {
-  return { ...configuration, connection: getConnections(connection) }
+  return {
+    ...configuration,
+    connection: {
+      nodes: getConnections(connection),
+      retry:
+        (connection as any)?.connection?.retry
+        ?? (configuration as any)?.connection?.retry
+        ?? Infinity,
+      frequency:
+        (connection as any)?.connection?.frequency
+        ?? (configuration as any)?.connection?.frequency
+        ?? 0,
+  }}
 }

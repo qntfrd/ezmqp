@@ -1,4 +1,5 @@
 import amqp from "amqplib"
+import { Rabbit } from "./rabbit"
 import { ExchangeConfig, QueueConfig, MsgOptions, ConsumerOptions } from "./types"
 
 /** One to one mapping with amqplib's channel */
@@ -6,25 +7,45 @@ export class Channel {
   //#region private properties
   /** The actual channel */
   private _channel: amqp.Channel | null = null
+  /** Whether the channel was manually closed */
+  private closing = false
   //#endregion
 
   /** Creates the channel
    *
    *  @param client - The `AMQP` connection
    */
-  constructor(private client: amqp.Connection) {}
+  constructor(private client: Rabbit) {}
 
+  //#region open/close
   /** Opens the channel */
   async connect(): Promise<Channel> {
     if (this._channel) return this
-    this._channel = await this.client.createChannel()
+    if (!this.client.connected) await this.client.connect()
+    this._channel = await this.client.connection.createChannel()
+    this.closing = false
+    this._channel.on("close", () => this.onClose())
+    // TODO: on return
+    // TODO: on error
+    // TODO: on drain
     return this
   }
 
-  // TODO: close
-  // TODO: events
-  // TODO: recover channel
+  /** Closes the channe */
+  async close() {
+    if (!this._channel) return
+    this.closing = true
+    await this._channel.close()
+  }
 
+  private onClose() {
+    this._channel = null
+    if (this.closing || !this.client.connected) return
+    return this.connect()
+  }
+  //#endregion
+
+  //#region getters
   /** Gets the channel (or throws if the channel is not opened)
    *
    *  @throws `Channel not opened` - If the channel is not opened
@@ -34,6 +55,11 @@ export class Channel {
     throw new Error("Channel not opened")
   }
 
+  /** Gets whether the channel is opened */
+  get connected() { return !!this._channel }
+  //#endregion
+
+  //#region amqplib mapping
   /** Assert a queue into existence.
    *
    *  This operation is idempotent given identical arguments; however, it will
@@ -333,4 +359,5 @@ export class Channel {
   recover(): Promise<any> {
     return this.channel.recover()
   }
+  //#endregion
 }
