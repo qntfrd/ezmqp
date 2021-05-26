@@ -8,7 +8,7 @@
     "up": "docker-compose up --renew-anon-volumes",
     "prepublish": "tsc",
     "doc": "typedoc",
-    "test": "mocha -r ts-node/register test/**/*.ts --inspect",
+    "test": "mocha -r ts-node/register test/**/*.ts",
     "test:cover": "nyc npm test",
     "test:watch": "npm test -- -w --watch-files test/**/*.ts,src/**/*.ts"
   },
@@ -38,7 +38,7 @@
     "chai": "^4.3.4",
     "mocha": "^8.4.0",
     "nyc": "^15.1.0",
-    "sinon": "^10.0.0",
+    "sinon": "^11.0.0",
     "ts-node": "^9.1.1",
     "typedoc": "0.20.36",
     "typescript": "4.2.4"

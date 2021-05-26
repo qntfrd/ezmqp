@@ -232,8 +232,47 @@ export type Connection = {
   vhost?: string
 }
 
+export type ConnectionString = string|Connection|Array<string|Connection>
+
 export type Configuration = {
-  connection?: string|Connection|Array<string|Connection>,
+  connection?: {
+    /** List of nodes in the cluster */
+    nodes?: ConnectionString,
+
+    /** How many cluster connection should be attempted
+     *
+     *  A cluster attempts is the attempt to connect to each node of the cluster
+     *  at least once.
+     *  If you have 3 nodes, A, B and C, ezmqp will try to connect to each one
+     *  once in order to consider this one attempt
+     *
+     *  **NB**: The first attempt does not count as a retry, thus if you set
+     *  retry to 1, you'll have one initial try and one retry, totalling two
+     *  attempts.
+     *
+     *  @default Infinity
+     */
+    retry?: number,
+
+    /** How long to wait between each attempts
+     *
+     *  An attempt is the attmpt to connect to the cluster and not individual
+     *  nodes.
+     *  Thus if you have a cluster of 3 nodes, A, B and C with a retry 1, the
+     *  following will happen:
+     *  - initial attempt to A
+     *  - initial attempt to B
+     *  - initial attempt to C
+     *  - wait `frequency`
+     *  - 1st retry to A
+     *  - 1st retry to B
+     *  - 1st retry to C
+     *  - throw if all failed
+     *
+     *  @default 0
+     */
+    frequency?: number,
+  } | ConnectionString
   exchanges?: {
     [key: string]: ExchangeConfig
   },
@@ -243,7 +282,11 @@ export type Configuration = {
 }
 
 export type InternalConfiguration = {
-  connection: Array<Required<Connection>>
+  connection: {
+    nodes: Array<Required<Connection>>
+    retry: number
+    frequency: number
+  }
   exchanges?: {
     [key: string]: ExchangeConfig,
   }

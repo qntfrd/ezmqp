@@ -57,7 +57,7 @@ const makeExpectCS = (obj: ConnectionOpts): string => {
   return cs
 }
 
-describe("Rabbit", () => {
+describe("Configuration", () => {
   const connectionTests = [
     ["empty connection string", , "amqp://guest:****@localhost:5672/"],
     ["simple connection string", "amqp://foo:bar@baz", "amqp://foo:****@baz:5672/"],

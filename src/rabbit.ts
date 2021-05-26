@@ -6,8 +6,13 @@ import { InternalConfiguration, Connection, Configuration, ExchangeConfig, Queue
 import { loadConfiguration } from "./configuration"
 
 export class Rabbit {
+  //#region private attributes
   /** The actual configuration */
   private configuration: InternalConfiguration
+  /** The current selected node */
+  private server: number = 0
+
+  private closing = false
 
   /** The actual amqp connection */
   private client: amqp.Connection | null = null
@@ -17,6 +22,7 @@ export class Rabbit {
   private channels: Map<string, Channel> = new Map()
   /** List of existing queues */
   private queues: Map<string, Queue> = new Map()
+  //#endregion
 
   /** Creates a client by loading a configuration
    *
@@ -33,13 +39,14 @@ export class Rabbit {
     this.configuration = loadConfiguration(connection, configuration)
   }
 
+  //#region getters/setters
   /** Gets the list of available servers
    *
    *  @note When the output is stringified, either with toString or toJSON,
    *  The password will be hidden with `****`
    */
   get nodes(): Array<Required<Connection>> {
-    return this.configuration.connection.map(node => {
+    return this.configuration.connection.nodes.map(node => {
       return {
         ...node,
         toString: function() {
@@ -58,6 +65,19 @@ export class Rabbit {
       }
     })
   }
+
+  /** Whether the client is connected to the server */
+  get connected() { return !!this.client }
+
+  /** Get the actual rabbit connection (or throw if not connected)
+   *
+   *  @throws `Broker is not connected`
+   */
+  get connection(): amqp.Connection {
+    if (this.client) return this.client
+    throw new Error("Broker is not connected")
+  }
+  //#endregion
 
   /** Enfore the configuartion on the server
    *  that is, create queues and exchange and bind the two together
@@ -107,10 +127,44 @@ export class Rabbit {
   //   }
   // }
 
-  /** Connects to the server and apply the configuration */ // TODO: connection recovery and cluster mode
-  async connect(): Promise<Rabbit> {
+  /** Connects to the server and apply the configuration
+   *
+   *  @param retry - The number of connection attempts
+   *  @param frequency - How long to wait before each attempts
+   *
+   *  NOTE: retry and frequency are for connection attempts to the cluster,
+   *  that is, if you have node A, B and C, connections attempts will occure
+   *  like so, with a retry of 1 (one attempt + one retry):
+   *  - A
+   *  - B
+   *  - C
+   *  - wait _frequency_
+   *  - A
+   *  - B
+   *  - C
+   *
+   */ // TODO: connection recovery and cluster mode
+  async connect(retry?: number, frequency?: number): Promise<Rabbit> {
     if (this.client) return this
-    this.client = await amqp.connect(this.configuration.connection[0])
+
+    const attempts = Math.max(0, retry ?? this.configuration.connection.retry)
+    const freq = Math.max(0, Math.min(frequency ?? this.configuration.connection.frequency, Number.MAX_SAFE_INTEGER))
+
+    try {
+      this.client = await amqp.connect(this.configuration.connection.nodes[this.server])
+      this.client.on("close", () => this.onClose())
+
+      await Promise.all([...this.channels.values()].map(channel => channel.connect()))
+    }
+    catch (e) {
+      this.server = (this.server + 1) % this.configuration.connection.nodes.length
+      // If server + 1 === 0, then we've tried all nodes, otherwise we need to retry
+      if (this.server !== 0) return this.connect(attempts, freq)
+      // We've exhausted our attempts
+      if (attempts === 0) throw e
+      if (freq !== 0) await new Promise(resolve => setTimeout(resolve, freq))
+      return this.connect(attempts - 1, freq)
+    }
 
     // await this.setup()
 
@@ -119,16 +173,21 @@ export class Rabbit {
 
   async close() {
     if (!this.client) return this
+    this.closing = true
     await this.client.close()
-    this.client = null
     return this
+  }
+
+  private onClose() {
+    this.client = null
+    if (this.closing) return
+    return this.connect()
   }
 
   /** Retrieve or create a channel */
   channel(name: string): Channel {
-    if (!this.client) throw new Error("Broker is not connected") // TODO: should that stay here? / Should we autoconnect?
     if (!this.channels.has(name))
-      this.channels.set(name, new Channel(this.client))
+      this.channels.set(name, new Channel(this))
     return this.channels.get(name) as Channel
   }
 
