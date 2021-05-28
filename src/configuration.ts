@@ -16,10 +16,10 @@ import { InternalConfiguration, Connection, Configuration, ConnectionString } fr
  */
 const validateNumber = (
   value: string|number|null|undefined,
-  fallback: number = 0,
-  min = 0,
-  max = Number.MAX_SAFE_INTEGER,
-  err = "Invalid number '%s'."
+  fallback: number, // = 0,
+  min, // = 0,
+  max, // = Number.MAX_SAFE_INTEGER,
+  err, // = "Invalid number '%s'."
 ): number => {
   if (value === undefined || value === null || value === "") return fallback
   if (Number.isNaN(Number(value)) || Number(value) != value)
@@ -89,7 +89,7 @@ const connectionStringToObject = (connectionString: string): Required<Connection
 
   return validateConnection({
     protocol: url.protocol.slice(0, -1) as "amqp"|"amqps",
-    hostname: !url.hostname ? "localhost" : url.hostname,
+    hostname: url.hostname, // hostname cannot be empty in a valid connection string
     username: !url.username ? "guest" : url.username,
     password: !url.password ? "guest" : url.password,
     port: !url.port ? 5672 : Number(url.port),
@@ -121,7 +121,10 @@ export const parseConnectionString = (connectionString: string = "amqp://localho
   return [connectionStringToObject(connectionString)]
 }
 
-
+/** Checks whether the object is a connection object
+ *
+ *  @param connection - The object to test
+ */
 const isConnection = (
   connection: Configuration|Connection|string|Array<Connection|string>
 ): boolean => {
@@ -135,6 +138,7 @@ const isConnection = (
     || connection.hasOwnProperty("frameMax")
     || connection.hasOwnProperty("heartbeat")
     || connection.hasOwnProperty("vhost")
+    || Object.keys(connection).length === 0
   ))
 }
 
@@ -166,6 +170,7 @@ const getConnections = (
     else
       return getConnections((connection as Configuration).connection as ConnectionString)
   }
+  throw new Error("Invalid configuration")
 }
 
 /** This retruns a properly formated configuration

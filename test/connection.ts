@@ -35,7 +35,7 @@ describe("Connection", () => {
   })
   it("Should retry the connection to a single node cluster in case of failure (connect policy)", async () => {
     sinon.spy(amqp, "connect")
-    const broker = new Rabbit("amqp://foo", { connection: { retry: 5, frequency: 100 }})
+    const broker = new Rabbit({ connection: { nodes: "amqp://foo", retry: 5, frequency: 100 }})
     const now = Date.now()
     try {
       await broker.connect()
@@ -75,6 +75,7 @@ describe("Connection", () => {
     await broker.channel("write").connect()
     expect(broker.connected).to.be.true
     expect(broker.channel("write").connected).to.be.true
+    await broker.close()
   })
   it("Closing a channel should not disconnect", async () => {
     const broker = new Rabbit("amqp://admin:admin@localhost:5001")
@@ -84,6 +85,7 @@ describe("Connection", () => {
     await broker.channel("write").close()
     expect(broker.connected).to.be.true
     expect(broker.channel("write").connected).to.be.false
+    await broker.close()
   })
   it("Closing a connection with opened channels should close channels", async () => {
     const broker = new Rabbit("amqp://admin:admin@localhost:5001")
@@ -105,8 +107,8 @@ describe("Connection", () => {
         return promise
       })
 
+    const broker = new Rabbit("amqp://admin:admin@localhost:5001")
     try {
-      const broker = new Rabbit("amqp://admin:admin@localhost:5001")
       await broker.connect()
       expect(broker.connected).to.be.true
       await connection.close()
@@ -116,6 +118,7 @@ describe("Connection", () => {
       expect(broker.connected).to.be.true
     }
     finally {
+      await broker.close()
       connect.restore()
     }
   })
@@ -130,21 +133,25 @@ describe("Connection", () => {
         return promise
       })
       .onCall(7).callsFake((cs: string|amqp.Options.Connect, _?: any) => (amqp.connect as any).wrappedMethod(cs))
+
+    const broker = new Rabbit([
+      "amqp://admin:admin@localhost:5001",
+      "amqp://admin:admin@localhost:5002",
+      "amqp://admin:admin@localhost:5003",
+    ])
     try {
-      const broker = new Rabbit([
-        "amqp://admin:admin@localhost:5001",
-        "amqp://admin:admin@localhost:5002",
-        "amqp://admin:admin@localhost:5003",
-      ])
       await broker.connect()
       await (connection as amqp.Connection).close()
       expect(broker.connected).to.be.false
+      await new Promise(resolve => setTimeout(resolve, 50))
+      expect(broker.connected).to.be.true
       expect((amqp.connect as any).callCount).to.eql(8)
       const arr = new Array(8)
       for (let i = 0; i < 8; i++)
         arr[i] = (amqp.connect as any).getCall(i).args[0].port
       expect(arr).to.eql([5001, 5001, 5002, 5003, 5001, 5002, 5003, 5001])
     } finally {
+      await broker.close()
       connect.restore()
     }
   })
@@ -158,8 +165,8 @@ describe("Connection", () => {
         return promise
       })
 
+    const broker = new Rabbit("amqp://admin:admin@localhost:5001")
     try {
-      const broker = new Rabbit("amqp://admin:admin@localhost:5001")
       await broker.channel("write").connect()
       expect(broker.connected).to.be.true
       expect(broker.channel("write").connected).to.be.true
@@ -172,6 +179,7 @@ describe("Connection", () => {
       expect(broker.channel("write").connected, "channel").to.be.true
     }
     finally {
+      await broker.close()
       connect.restore()
     }
   })
@@ -184,6 +192,25 @@ describe("Connection", () => {
     expect(broker.channel("write").connected).to.be.false
     await new Promise(resolve => setTimeout(resolve, 50))
     expect(broker.channel("write").connected).to.be.true
+    await broker.close()
+  })
+  it("Should be able to access the connection if the broker is connected", async () => {
+    const broker = new Rabbit("amqp://admin:admin@localhost:5001")
+    try {
+      const connection = broker.connection
+      return Promise.reject(new Error("Should have thrown"))
+    }
+    catch (err) {
+      expect(err.message).to.eql("Broker is not connected")
+    }
+
+    try {
+      await broker.connect()
+      expect(broker.connection).to.not.be.null
+    }
+    finally {
+      await broker.close()
+    }
   })
 
   it("Should assert the configuration")
