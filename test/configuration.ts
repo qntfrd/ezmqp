@@ -36,6 +36,7 @@ const makeCS = (obj: ConnectionOpts): string => {
     cs += `?${params.join("&")}`
   return cs
 }
+
 const makeExpectCS = (obj: ConnectionOpts): string => {
   const cs = `${
     obj.protocol === "amqps" ? "amqps" : "amqp"
@@ -60,6 +61,7 @@ const makeExpectCS = (obj: ConnectionOpts): string => {
 describe("Configuration", () => {
   const connectionTests = [
     ["empty connection string", , "amqp://guest:****@localhost:5672/"],
+    ["empty connection object", {}, "amqp://guest:****@localhost:5672/"],
     ["simple connection string", "amqp://foo:bar@baz", "amqp://foo:****@baz:5672/"],
     ["simple connection object", { protocol: "amqps" } as Connection, "amqps://guest:****@localhost:5672/"],
     ["array of connection string", ["amqp://foo", "amqp://bar", "amqp://baz"], "amqp://guest:****@foo:5672/,amqp://guest:****@bar:5672/,amqp://guest:****@baz:5672/"],
@@ -77,6 +79,24 @@ describe("Configuration", () => {
       expect(broker.nodes + "").to.eql(test[2])
     })
   }
+  it("Should handle unknown connection connection string", () => {
+    try {
+      new Rabbit("foo")
+      return Promise.reject(new Error("Should have thrown"))
+    }
+    catch (e) {
+      expect(e.message).to.eql("Invalid URL: foo")
+    }
+  })
+  it("Should handle unknown connection connection object", () => {
+    try {
+      new Rabbit({ foo: 1337 } as any)
+      return Promise.reject(new Error("Should have thrown"))
+    }
+    catch (e) {
+      expect(e.message).to.eql("Invalid configuration")
+    }
+  })
 
   const tests = {
     protocol: [[,"amqp", "amqps", ""], ["http", "https"], "Invalid protocol '%s'"],
@@ -128,6 +148,15 @@ describe("Configuration", () => {
       })
     }
   }
+
+  it("Should hide the password when stringifying the connection object", () => {
+    const broker = new Rabbit("amqp://bar:baz@foo")
+    expect(broker.nodes[0] + "").to.eql("amqp://bar:****@foo:5672/")
+  })
+  it("Should hide the password when jsonifying the connection object", () => {
+    const broker = new Rabbit("amqp://bar:baz@foo")
+    expect(JSON.parse(JSON.stringify(broker.nodes[0])).password).to.eql("****")
+  })
 
   it("Should validate the configuration object")
   it("Should allow policies")
