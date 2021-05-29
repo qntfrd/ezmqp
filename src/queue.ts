@@ -10,8 +10,9 @@ import { prepareMessage } from "./utils"
  */
 const makeChain = <T>(handlers: Handler<T>[]): Handler<T> =>
   handlers.reduce((chain, hdl) =>
-    (msg, next) => chain(msg, (success?: boolean) => {
+    (msg, next) => chain(msg, (success?: boolean|Error) => {
       if (success === false) return next(false)
+      if (success instanceof Error) return next(success)
       if (success === true) next(true)
       return hdl(msg, next)
     })
@@ -51,7 +52,7 @@ export class Queue {
     return (success = true) => {
       if (called) return
       called = true
-      if (success) return this.client.channel("__read__").ack(msg)
+      if (success === true) return this.client.channel("__read__").ack(msg)
       else return this.client.channel("__read__").nack(msg, false, !this.config.deadLetterExchange)
     }
   }
@@ -83,6 +84,7 @@ export class Queue {
     const chain = makeChain(hdl)
 
     this.consumerTag = await this.client.channel("__read__").consume(this.name, async msg => {
+      // istanbul ignore if - don't know how to have it null
       if (!msg) return
       const message: ReceivedMessage<T> = {
         content: msg.content as any,
@@ -94,7 +96,7 @@ export class Queue {
       const ack = this.makeAck(msg)
       try {
         await chain(message, ack)
-        ack(true)
+        ack()
       } catch { ack(false) }
     }).then(ct => ct.consumerTag)
   }

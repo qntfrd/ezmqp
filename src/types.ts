@@ -27,7 +27,7 @@ export type ExchangeConfig = {
    *  If this field is set, the type of exchange will be forcibly set to fanout
    *  and bindings to the queues will be automatically created
    */
-  fanout?: string[],
+  fanout?: string|string[],
 
   /** List queues to route to
    *
@@ -394,5 +394,5 @@ export type ConsumerOptions = {
   priority?: number
 }
 
-export type Ack = (success?: boolean) => void|Promise<void>
+export type Ack = (success?: boolean|Error) => void|Promise<void>
 export type Handler<T> = (message: ReceivedMessage<T>, ack: Ack) => Promise<void>|void
