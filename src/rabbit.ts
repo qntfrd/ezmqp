@@ -82,50 +82,52 @@ export class Rabbit {
   /** Enfore the configuartion on the server
    *  that is, create queues and exchange and bind the two together
    */
-  // private async setup() {
-  //   for (const exchange in this.configuration.exchanges) {
-  //     const cnf = this.configuration.exchanges[exchange]
-  //     const ex = await this.exchange(cnf.name || exchange, cnf).assert()
-  //     if (cnf.hasOwnProperty("topics")) {
-  //       const c = cnf as { topics: {[key: string]: string|string[]}}
-  //       await Promise.all(Object.keys(c.topics)
-  //         .map(queue => {
-  //           const qcnf = this.configuration.queues && this.configuration.queues[queue] || {}
-  //           const qname = qcnf.name || queue
-  //           return this.queue(qname, qcnf).assert().then(async q => {
-  //             if (Array.isArray(c.topics[queue]))
-  //               return Promise.all((c.topics[queue] as string[]).map(rk => ex.bind(q, rk)))
-  //             return ex.bind(q, c.topics[queue] as string)
-  //           })
-  //         }))
-  //     }
-  //     else if (cnf.hasOwnProperty("direct")) {
-  //       const c = cnf as {direct: {[key: string]: string|string[]}}
-  //       await Promise.all(Object.keys(c.direct)
-  //         .map(queue => {
-  //           const qcnf = this.configuration.queues && this.configuration.queues[queue] || {}
-  //           const qname = qcnf.name || queue
-  //           return this.queue(qname, qcnf).assert().then(async q => {
-  //             if (Array.isArray(c.direct[queue]))
-  //               return Promise.all((c.direct[queue] as string[]).map(rk => ex.bind(q, rk)))
-  //             return ex.bind(q, c.direct[queue] as string)
-  //           })
-  //         }))
-  //     }
-  //     else if (cnf.hasOwnProperty("fanout")) {
-  //       const c = cnf as { fanout: string[] }
-  //       await Promise.all(c.fanout.map(queue => {
-  //         const qcnf = this.configuration.queues && this.configuration.queues[queue] || {}
-  //         const qname = qcnf.name || queue
-  //         return this.queue(qname, qcnf).assert().then(q => ex.bind(q))
-  //       }))
-  //     }
-  //   }
-  //   for (const queue in this.configuration.queues) {
-  //     const cnf = this.configuration.queues[queue]
-  //     await this.queue(cnf.name || queue, cnf).assert()
-  //   }
-  // }
+  private async setup() {
+    for (const exchange in this.configuration.exchanges) {
+      const cnf = this.configuration.exchanges[exchange]
+      const ex = await this.exchange(cnf.name || exchange, cnf).assert()
+      if (cnf.hasOwnProperty("topics")) {
+        const c = cnf as { topics: {[key: string]: string|string[]}}
+        await Promise.all(Object.keys(c.topics)
+          .map(queue => {
+            const qcnf = this.configuration.queues && this.configuration.queues[queue] || {}
+            const qname = qcnf.name || queue
+            return this.queue(qname, qcnf).assert().then(async q => {
+              if (Array.isArray(c.topics[queue]))
+                return Promise.all((c.topics[queue] as string[]).map(rk => ex.bind(q, rk)))
+              return ex.bind(q, c.topics[queue] as string)
+            })
+          }))
+      }
+      else if (cnf.hasOwnProperty("direct")) {
+        const c = cnf as {direct: {[key: string]: string|string[]}}
+        await Promise.all(Object.keys(c.direct)
+          .map(queue => {
+            const qcnf = this.configuration.queues && this.configuration.queues[queue] || {}
+            const qname = qcnf.name || queue
+            return this.queue(qname, qcnf).assert().then(async q => {
+              if (Array.isArray(c.direct[queue]))
+                return Promise.all((c.direct[queue] as string[]).map(rk => ex.bind(q, rk)))
+              return ex.bind(q, c.direct[queue] as string)
+            })
+          }))
+      }
+      else if (cnf.hasOwnProperty("fanout")) {
+        const c = cnf as { fanout: string|string[] }
+        if (!Array.isArray(c.fanout))
+          c.fanout = [c.fanout]
+        await Promise.all(c.fanout.map(queue => {
+          const qcnf = this.configuration.queues && this.configuration.queues[queue] || {}
+          const qname = qcnf.name || queue
+          return this.queue(qname, qcnf).assert().then(q => ex.bind(q))
+        }))
+      }
+    }
+    for (const queue in this.configuration.queues) {
+      const cnf = this.configuration.queues[queue]
+      await this.queue(cnf.name || queue, cnf).assert()
+    }
+  }
 
   /** Connects to the server and apply the configuration
    *
@@ -166,7 +168,7 @@ export class Rabbit {
       return this.connect(attempts - 1, freq)
     }
 
-    // await this.setup()
+    await this.setup()
 
     return this
   }
