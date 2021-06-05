@@ -31,7 +31,7 @@
     "url": "https://github.com/qtfrd/ezmqp/issues"
   },
   "devDependencies": {
-    "@types/amqplib": "0.5.17",
+    "@types/amqplib": "0.8.0",
     "@types/chai": "^4.2.18",
     "@types/mocha": "^8.2.2",
     "@types/sinon": "^10.0.0",
