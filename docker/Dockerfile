@@ -1,4 +1,4 @@
-FROM rabbitmq:3.10.1-management
+FROM rabbitmq:3.10.2-management
 
 ADD rabbit.sh .
 ADD --chown=rabbitmq:rabbitmq erlang.cookie ${RABBIT_BASEDIR}/var/lib/rabbitmq/.erlang.cookie
