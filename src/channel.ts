@@ -73,8 +73,8 @@ export class Channel {
    *  @param options - is an object and may be empty or null, or outright
    *  omitted if it’s the last argument.
    */
-  assertQueue(name: string, options: QueueConfig = {}): Promise<any> {
-    return this.channel.assertQueue(name, options)
+  async assertQueue(name: string, options: QueueConfig = {}): Promise<any> {
+    return await this.channel.assertQueue(name, options)
   }
 
   /** Delete named queue
@@ -94,8 +94,8 @@ export class Channel {
    *  You should leave out the options altogether if you want to delete the
    *  queue unconditionally.
    */
-  deleteQueue(queue: string, options?: { ifUnused?: boolean, ifEmpty?: boolean }): Promise<any> {
-    return this.channel.deleteQueue(queue, options)
+  async deleteQueue(queue: string, options?: { ifUnused?: boolean, ifEmpty?: boolean }): Promise<any> {
+    return await this.channel.deleteQueue(queue, options)
   }
 
   /** Remove all undelivered message from the queue
@@ -105,8 +105,8 @@ export class Channel {
    *  circumstances (e.g., if the channel to which they were delivered closes
    *  without acknowledging them).
    */
-  purgeQueue(queue: string): Promise<any> {
-    return this.channel.purgeQueue(queue)
+  async purgeQueue(queue: string): Promise<any> {
+    return await this.channel.purgeQueue(queue)
   }
 
   /** Assert a routing path from an exchange to a queue
@@ -124,8 +124,8 @@ export class Channel {
    *  It may be omitted if it’s the last argument, which is equivalent to an
    *  empty object.
    */
-  bindQueue(queue: string, exchange: string, routingKey: string, args?: any): Promise<any> {
-    return this.channel.bindQueue(queue, exchange, routingKey, args)
+  async bindQueue(queue: string, exchange: string, routingKey: string, args?: any): Promise<any> {
+    return await this.channel.bindQueue(queue, exchange, routingKey, args)
   }
 
   /** Remove routing between the queue and the exchange for the routingKey with
@@ -142,8 +142,8 @@ export class Channel {
    *  @param routingKey - The routing to remove
    *  @param args - Some extra arguments
    */
-  unbindQueue(queue: string, exchange: string, routingKey: string, args?: any): Promise<any> {
-    return this.channel.unbindQueue(queue, exchange, routingKey, args)
+  async unbindQueue(queue: string, exchange: string, routingKey: string, args?: any): Promise<any> {
+    return await this.channel.unbindQueue(queue, exchange, routingKey, args)
   }
 
   /** Assert an exchange into existence.
@@ -164,16 +164,16 @@ export class Channel {
    * @param type - The type of exchange
    * @param options - Some options
    */
-  assertExchange(name: string, type: "fanout"|"direct"|"topic"|"header", options: ExchangeConfig = {}): Promise<{ exchange: string }> {
-    return this.channel.assertExchange(name, type, options)
+  async assertExchange(name: string, type: "fanout"|"direct"|"topic"|"header", options: ExchangeConfig = {}): Promise<{ exchange: string }> {
+    return await this.channel.assertExchange(name, type, options)
   }
 
   /** Checks wether the exchange exists
    *
    *  @param name - The name of the exchange to check
    */
-  checkExchange(name: string): Promise<any> {
-    return this.channel.checkExchange(name)
+  async checkExchange(name: string): Promise<any> {
+    return await this.channel.checkExchange(name)
   }
 
   /** Deletes an exchange
@@ -182,8 +182,8 @@ export class Channel {
    *  @param options.ifUnused - If true and the exchanges has bindings, it will
    *  not be deleted
    */
-  deleteExchange(name: string, options?: { ifUnused: boolean }): Promise<any> {
-    return this.channel.deleteExchange(name, options)
+  async deleteExchange(name: string, options?: { ifUnused: boolean }): Promise<any> {
+    return await this.channel.deleteExchange(name, options)
   }
 
   /** Bind an exchange to another exchange
@@ -201,8 +201,8 @@ export class Channel {
    *  @param pattern - The pattern to match
    *  @param args - Some argyuments
    */
-  bindExchange(destination: string, source: string, pattern: string, args?: any): Promise<any> {
-    return this.channel.bindExchange(destination, source, pattern, args)
+  async bindExchange(destination: string, source: string, pattern: string, args?: any): Promise<any> {
+    return await this.channel.bindExchange(destination, source, pattern, args)
   }
 
   /** Removes bindings between exchanges
@@ -210,7 +210,7 @@ export class Channel {
    *  A binding with the exact source exchange, destination exchange, routingKey
    *  pattern, and extension args will be removed.
    */
-  unbindExchange(destination: string, source: string, pattern: string, args?: any): Promise<any> {
+  async unbindExchange(destination: string, source: string, pattern: string, args?: any): Promise<any> {
     return this.channel.unbindExchange(destination, source, pattern, args)
   }
 
@@ -244,12 +244,12 @@ export class Channel {
    *  @param hdl - The callback that will receive messages
    *  @param options - Some options
    */
-  consume(
+  async consume(
     queue: string,
     hdl: (msg: amqp.ConsumeMessage|null) => void,
     options: ConsumerOptions = {}
   ): Promise<{ consumerTag: string }> {
-    return this.channel.consume(queue, hdl, options)
+    return await this.channel.consume(queue, hdl, options)
   }
 
   /** Stop sending messages to that consumer
@@ -261,8 +261,8 @@ export class Channel {
    *  The consumerTag is the string given in the reply to #consume,
    *  which may have been generated by the server.
    */
-  cancel(consumerTag: string): Promise<any> {
-    return this.channel.cancel(consumerTag)
+  async cancel(consumerTag: string): Promise<any> {
+    return await this.channel.cancel(consumerTag)
   }
 
   /** Reads one message from the queue
@@ -272,8 +272,8 @@ export class Channel {
    *  Otherwise you'll have to ack it yourself
    *  @return false if there are no messages on top of the queue, the message otherwise
    */
-  get(queue: string, options?: { noAck: boolean }): Promise<false|amqp.GetMessage> {
-    return this.channel.get(queue, options)
+  async get(queue: string, options?: { noAck: boolean }): Promise<false|amqp.GetMessage> {
+    return await this.channel.get(queue, options)
   }
 
   /** Acknowledge the given message
@@ -351,13 +351,13 @@ export class Channel {
    *  the server will not send more messages on this channel until one or more
    *  have been acknowledged. A falsey value for count indicates no such limit.
    */
-  prefetch(count: number): Promise<any> {
-    return this.channel.prefetch(count)
+  async prefetch(count: number): Promise<any> {
+    return await this.channel.prefetch(count)
   }
 
   /** Requeue unacknowledge messages */
-  recover(): Promise<any> {
-    return this.channel.recover()
+  async recover(): Promise<any> {
+    return await this.channel.recover()
   }
   //#endregion
 }
